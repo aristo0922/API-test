@@ -7,3 +7,9 @@ class AuthUser(models.Model):
     is_valid= models.BooleanField(default=False)
     class Meta:
         db_table='User'
+
+    def get_name(self):
+        return self.user_name
+
+    def get_valid(self):
+        return self.is_valid

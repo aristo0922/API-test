@@ -3,8 +3,6 @@ import time
 from random import randint
 
 import requests
-from django.http import JsonResponse
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -49,21 +47,19 @@ class AuthSmsSendView(APIView):
             return Response({"message":"success"}, status=status.HTTP_200_OK)
 
         except:
-            return Response({"message":"failed!"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"message":"시스템 오류! 새로고침 후 다시 시도해 주세요."}, status=status.HTTP_401_UNAUTHORIZED)
 
 class Identificate(APIView):
     def post(self, request):
         try:
             input_data=json.loads(request.body)
             user_input_number=input_data['user_input']
-            print(user_input_number)
             auth_number=input_data['auth_number']
-            print(auth_number)
 
             if user_input_number == auth_number:
-                print(">>> in the if method")
                 AuthUser.objects.update_or_create(phone_number=input_data['phone_number'], is_valid=True)
-                AuthUser.save()
+
+            return Response({"message": "success"}, status=status.HTTP_201_CREATED)
 
         except:
             return Response({"message":"인증번호를 다시 확인해주세요"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -73,11 +69,20 @@ class RegisterUser(APIView):
     def post(self, request):
         try:
             input_data=json.loads(request.body)
-
-            AuthUser.objects.update_or_create(phone_number=input_data['phone_number'], user_name=input_data['user_name'])
-            AuthUser.save()
+            user=AuthUser.objects.get(phone_number=input_data['phone_number'])
+            if user:
+                AuthUser.objects.update(phone_number=input_data['phone_number'], user_name=input_data['user_name'])
+            else:
+                return Response({"message":"전화번호 인증을 해주세요"}, status=status.HTTP_401_UNAUTHORIZED)
             return Response({"message":"success"}, status=status.HTTP_201_CREATED)
 
         except:
-            return Response({"message": "failed!"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"message": "다시 한번 시도해주세요!"}, status=status.HTTP_401_UNAUTHORIZED)
 
+    def get(self, request):
+        input_data=json.loads(request.body)
+        user = AuthUser.objects.get(phone_number=input_data['phone_number'])
+
+        response_data={"user_name": user.get_name(), "is_valid": user.get_valid()}
+
+        return Response( response_data, status=status.HTTP_200_OK)
