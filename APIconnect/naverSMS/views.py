@@ -1,6 +1,8 @@
 import json
+import time
 from random import randint
 
+import requests
 from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework import status
@@ -9,27 +11,33 @@ from rest_framework.views import APIView
 
 from APIconnect.settings import get_secret
 from .models import AuthUser
+from .utils import make_signature
 
 
 # Create your views here.
 class AuthSmsSendView(APIView):
     def send_sms(self, phone_number, auth_number):
+        timestamp = str(int(time.time() * 1000))
+
         headers={
             'Content-Type': 'application/json; charset=utf-8',
-            'x-ncp-auth-key': f'{get_secret("SMS_ACCESS_KEY_ID")}',
-            'x-ncp-service-secret': f'{get_secret("SMS_SERVICE_SECRET")}',
+            'x-ncp-apigw-timestamp': timestamp,  # 네이버 API 서버와 5분이상 시간차이 발생시 오류
+            'x-ncp-iam-access-key': f'{get_secret("SMS_ACCESS_KEY_ID")}',
+            'x-ncp-apigw-signature-v2': make_signature(timestamp)  # utils.py 이용
         }
 
-        data={
+        body={
             'type':'SMS',
-            'contentType':'COMM',
             'countryCode':'82',
+            'contentType':'COMM',
             'from':f'{get_secret("SMS_SEND_PHONE_NUMBER")}',
-            'to':[
-                f'{get_secret("phone_number")}'
-            ],
-            'content':f'아령 테스트 중... 혹사 네 전화번호 써도 됨? 인증번호[{auth_number}'
+            'messages':[{
+                'to':phone_number,
+                'content':f'아령 테스트 중... 혹she 네 전화번호 써도 됨? 인증번호[{auth_number}',
+            }]
         }
+        requests.post(get_secret("SMS_SEND_URI"), data=json.dumps(body), headers= headers)
+
     # 메시지 전달
     def post(self, request):
         try:
