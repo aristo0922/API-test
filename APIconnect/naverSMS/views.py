@@ -50,6 +50,7 @@ class AuthSmsSendView(APIView):
             return Response({"message":"시스템 오류! 새로고침 후 다시 시도해 주세요."}, status=status.HTTP_401_UNAUTHORIZED)
 
 class Identificate(APIView):
+    # TODO: 사용자 인증 번호를 서버 내에서 저장할 수 있도록 db 수정
     def post(self, request):
         try:
             input_data=json.loads(request.body)
