@@ -10,8 +10,7 @@ def make_signature(timestamp):
     secret_key = get_secret("SMS_SERVICE_SECRET")
     secret_key = bytes(secret_key, 'UTF-8')
 
-    uri = get_secret("SMS_SEND_URI")
-    # uri 중간에 Console - Project - 해당 Project 서비스 ID 입력 (예시 = ncp:sms:kr:263092132141:sms)
+    uri = get_secret("SMS_SIGNATURE_URI")
 
     message = "POST" + " " + uri + "\n" + timestamp + "\n" + access_key
     message = bytes(message, 'UTF-8')
